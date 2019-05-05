@@ -1,0 +1,6 @@
+#!/bin/bash
+scp Bot_controller/*.py root@192.168.0.113:~/praca_dyplomowa/git/Bot_controller
+scp Bot_controller/controller/*.py root@192.168.0.113:~/praca_dyplomowa/git/Bot_controller/controller
+scp Bot_controller/communication/*.py root@192.168.0.113:~/praca_dyplomowa/git/Bot_controller/communication
+
+#rsync -avh -e ssh ../Bot_controller  root@192.168.0.113:~/praca_dyplomowa/git
