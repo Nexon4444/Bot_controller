@@ -1,12 +1,10 @@
-from communication import Message, Communicate
-from swarm_bot import Swarm_bot
+from communication import Communicate
+from controller.swarm_bot import Swarm_bot
 # from robot import Control
 
 print ("executing bot control")
 
 #!/usr/bin/python
-import mraa
-import time
 
 
 def main():

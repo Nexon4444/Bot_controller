@@ -1,5 +1,6 @@
 # Import package
 import paho.mqtt.client as mqtt
+# import mqtt
 import time
 import re
 
@@ -104,7 +105,7 @@ class Communicate(object):
         print("connecting to broker", str(broker))
         self.client.connect(broker, port)
 
-        # while not client.connected_flag: #wait in loop
+        # while not client.conne(?P<swarm_bot_name>\w*):(cted_flag: #wait in loop
         #     print("In wait loop")
         #     time.sleep(1)
         self.client.subscribe("swarm_bot2/commands")

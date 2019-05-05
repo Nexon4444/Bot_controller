@@ -13,7 +13,6 @@ class Swarm_bot(object):
         self.parsed_command = self.choose_command(simple_command.command)
 
     def choose_command(self, cmd):
-
         if (cmd == "lrotate"):
             self.control.lrotate(self.interval)
         elif (cmd == "rrotate"):
