@@ -1,6 +1,10 @@
 import mraa
 import time
 import threading
+import logging
+logging.basicConfig(level=logging.DEBUG,
+                    format='(%(threadName)-10s) %(message)s',
+                    )
 from Queue import Queue
 
 class Control(object):
@@ -62,11 +66,31 @@ class Control(object):
         print("lturning")
         self.move(0.5, 1, 1, 0, 1, 0, tide)
 
-
     def rturn(self, tide):
         print ("rturning")
         self.move(1, 0.5, 1, 0, 1, 0, tide)
 
+    def movement_front_until_event(self, e):
+        # print "q: " + str(q.get())
+        logging.log(logging.DEBUG, "before wait")
+        self.forward_nonstop()
+        e.wait()
+        self.stop()
+        logging.log(logging.DEBUG, "after stop")
+
+    def get_sensor_info(self, e, switching_to):
+        # e = threading.Event()
+        gpio = mraa.Gpio(Control.sensor_pin_id)
+        prev_switch = gpio.read()
+        while (True):
+            switch = gpio.read()
+            # logging.log(logging.DEBUG, "switch: " + str(switch))
+            if switch != prev_switch and switch == switching_to:
+                logging.log(logging.DEBUG, "switch: " + str(switch))
+                logging.log(logging.DEBUG, "event before: " + str(e.is_set()))
+                e.set()
+                logging.log(logging.DEBUG, "event after: " + str(e.is_set()))
+            prev_switch = switch
 
     def move_nonstop(self, xpa, xpb, xa1, xa2, xb1, xb2):
         mraa.pwma.write(xpa)
@@ -84,59 +108,96 @@ class Control(object):
         mraa.pwma.write(0)
         mraa.pwma.write(0)
 
-    def forward_nonstop(self):
+    def forward_nonstop(self, speed):
         print("driving forward")
-        self.move_nonstop(1, 1, 1, 0, 1, 0)
+        self.move_nonstop(speed, speed, 1, 0, 1, 0)
 
-    def back_nonstop(self):
+    def back_nonstop(self, speed):
         print("driving back")
-        self.move_nonstop(1, 1, 0, 1, 0, 1)
+        self.move_nonstop(speed, speed, 0, 1, 0, 1)
 
-    def lrotate_nonstop(self):
+    def lrotate_nonstop(self, speed):
         print("lrotating")
-        self.move_nonstop(1, 1, 0, 1, 1, 0)
+        self.move_nonstop(speed, speed, 0, 1, 1, 0)
 
-    def rrotate_nonstop(self):
+    def rrotate_nonstop(self, speed):
         print("rrotating")
-        self.move_nonstop(1, 1, 1, 0, 0, 1)
+        self.move_nonstop(speed, speed, 1, 0, 0, 1)
 
-    def lturn_nonstop(self):
+    def lturn_nonstop(self, speed):
         print("lturning")
         self.move_nonstop(0.5, 1, 1, 0, 1, 0)
 
 
-    def rturn_nonstop(self):
+    def rturn_nonstop(self, speed):
         print ("rturning")
         self.move_nonstop(1, 0.5, 1, 0, 1, 0)
 
-
-
     def move_front_until_sensor_act(self):
-        q = Queue()
-        t_sensor = threading.Thread(target=self.get_sensor_info, args=[q])
-        t_movement = threading.Thread(target=self.forward, args=[q])
+        e = threading.Event()
+        con = Control()
+        # q = Queue()
+        # q.put(1)
+        # con.forward_nonstop()
+        # time.sleep(1)
+        # con.stop()
+        t = threading.Thread(target=self.movement_front_until_event, args=[con, e])
+        t2 = threading.Thread(target=self.get_sensor_info, args=[e])
+        t.start()
+        t2.start()
 
-        t_movement.start()
+        t.join()
+        t2.join()
+
+    def measure_turn_rate(self, e, speed):
+        # e = threading.Event()
+        number_of_turns = 5
+        start = time.time()
+
+        for i in range(0, number_of_turns):
+            self.rrotate_nonstop(speed)
+            logging.log(logging.DEBUG, "i: " + str(i))
+
+            e.wait()
+            e.clear()
+            logging.log(logging.DEBUG, "stopped waiting")
+
+        self.stop()
+        end = time.time()
+        time_of_turns = end - start
+        print (time_of_turns)
+
+    def calibrate(self):
+        print ("put robot on a calibration sheet, enter '1' to continue")
+        entered = input("put robot on a calibration sheet, enter '1' to continue: ")
+        while (entered is not 1):
+            entered = input("put robot on a calibration sheet, enter '1' to continue: ")
+
+        e = threading.Event()
+        speed = 0.65
+        t_measure = threading.Thread(target=self.measure_turn_rate, args=[e, speed])
+        t_sensor = threading.Thread(target=self.get_sensor_info, args=[e, 0])
+
+        t_measure.start()
         t_sensor.start()
 
-
+        t_measure.join()
         t_sensor.join()
-        t_movement.join()
 
-    def get_sensor_info(self, q):
-        gpio = mraa.Gpio(Control.sensor_pin_id)
-        while (True):
-            s = gpio.read()
-            print s
-            q.put(s)
-
-    def movement_front(self, q):
-        x = 0
-        for i in range(0, 10):
-            if q.get() is 0:
-                exit()
-            print "q: " + q.get()
-            self.forward(float(1))
-            print "x =" + str(x)
-            x = x + 1
+    # def get_sensor_info(self, q):
+    #     gpio = mraa.Gpio(Control.sensor_pin_id)
+    #     while (True):
+    #         s = gpio.read()
+    #         print s
+    #         q.put(s)
+    #
+    # def movement_front(self, q):
+    #     x = 0
+    #     for i in range(0, 10):
+    #         if q.get() is 0:
+    #             exit()
+    #         print "q: " + q.get()
+    #         self.forward(float(1))
+    #         print "x =" + str(x)
+    #         x = x + 1
 

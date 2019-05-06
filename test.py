@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.DEBUG,
 import mraa
 from Queue import Queue
 
-def movement_front(self, e):
+def movement_front_until_sensor(self, e):
     # print "q: " + str(q.get())
     logging.log(logging.DEBUG, "before wait")
     self.forward_nonstop()
