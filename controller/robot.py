@@ -9,6 +9,7 @@ from Queue import Queue
 
 class Control(object):
     sensor_pin_id = 45
+    def
     def __init__(self):
         mraa.pwma = mraa.Pwm(20)
         mraa.pwma.period_us(1000)
@@ -128,26 +129,25 @@ class Control(object):
         print("lturning")
         self.move_nonstop(0.5, 1, 1, 0, 1, 0)
 
-
     def rturn_nonstop(self, speed):
         print ("rturning")
         self.move_nonstop(1, 0.5, 1, 0, 1, 0)
 
-    def move_front_until_sensor_act(self):
-        e = threading.Event()
-        con = Control()
-        # q = Queue()
-        # q.put(1)
-        # con.forward_nonstop()
-        # time.sleep(1)
-        # con.stop()
-        t = threading.Thread(target=self.movement_front_until_event, args=[con, e])
-        t2 = threading.Thread(target=self.get_sensor_info, args=[e])
-        t.start()
-        t2.start()
-
-        t.join()
-        t2.join()
+    # def move_front_until_sensor_act(self):
+    #     e = threading.Event()
+    #     con = Control()
+    #     # q = Queue()
+    #     # q.put(1)
+    #     # con.forward_nonstop()
+    #     # time.sleep(1)
+    #     # con.stop()
+    #     t = threading.Thread(target=self.movement_front_until_event, args=[con, e])
+    #     t2 = threading.Thread(target=self.get_sensor_info, args=[e])
+    #     t.start()
+    #     t2.start()
+    #
+    #     t.join()
+    #     t2.join()
 
     def measure_turn_rate(self, e, speed):
         # e = threading.Event()
@@ -167,6 +167,23 @@ class Control(object):
         time_of_turns = end - start
         print (time_of_turns)
 
+    def measure_moving_speed(self, e, speed):
+        number_of_lines = 1
+        start = time.time()
+
+        for i in range(0, number_of_lines):
+            self.forward_nonstop(speed)
+            logging.log(logging.DEBUG, "i: " + str(i))
+
+            e.wait()
+            e.clear()
+            logging.log(logging.DEBUG, "stopped waiting")
+
+        self.stop()
+        end = time.time()
+        time_of_movement = end - start
+        logging.log(logging.DEBUG, "movement time: " + str(time_of_movement))
+
     def calibrate(self):
         print ("put robot on a calibration sheet, enter '1' to continue")
         entered = input("put robot on a calibration sheet, enter '1' to continue: ")
@@ -174,14 +191,17 @@ class Control(object):
             entered = input("put robot on a calibration sheet, enter '1' to continue: ")
 
         e = threading.Event()
-        speed = 0.65
-        t_measure = threading.Thread(target=self.measure_turn_rate, args=[e, speed])
+        pwm = 0.65
+        t_measure_speed = threading.Thread(target=self.measure_moving_speed, args=[e, pwm])
+        # t_measure = threading.Thread(target=self.measure_turn_rate, args=[e, speed])
         t_sensor = threading.Thread(target=self.get_sensor_info, args=[e, 0])
 
-        t_measure.start()
+        t_measure_speed.start()
+        # t_measure.start()
         t_sensor.start()
 
-        t_measure.join()
+        t_measure_speed.join()
+        # t_measure.join()
         t_sensor.join()
 
     # def get_sensor_info(self, q):

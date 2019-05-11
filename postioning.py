@@ -263,10 +263,11 @@ class Simulation:
                 next_vec.x = (math.floor(vec.x / a)) * a
 
             return next_vec
+
     def align(self, vec, a):
         aux_vec = Vector(vec.x/a, vec.y/a)
         next_vec = Vector(0,0)
-        if aux_vec.x >= aux_vec.y:
+        # if aux_vec.x >= aux_vec.y:
 
 
 
