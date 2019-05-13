@@ -1,4 +1,6 @@
-import mraa
+import os
+if os.name is not 'nt':
+    import mraa
 import time
 import threading
 import logging

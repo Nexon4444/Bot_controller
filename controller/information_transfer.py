@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.DEBUG,
 
 
 class Messenger:
-    logging_on = True
+    logging_on = False
     logging_mess_on = True
 
     def __init__(self, name, communication_settings, mess_event):
@@ -41,8 +41,9 @@ class Messenger:
         # self.client.subscribe(str("1/main").decode("UTF-8"))
 
 
+
     def on_log(self, client, userdata, level, buf):
-        self.log(self.name + " log: " + buf + " ")
+        self.log(str(self.name) + " log: " + str(buf) + " ")
 
     def on_connect(self, client, userdata, flags, rc):
         if rc == 0:
@@ -56,8 +57,9 @@ class Messenger:
 
     def on_message(self, client, userdata, msg):
         # topic = msg.topic
+        logging.debug("received message: " + str(msg))
         m_decode = str(msg.payload.decode("utf-8"))
-        print("=========++++++++++++=============")
+        # print("=========++++++++++++=============")
         self.log(str(self.name) + " received message: " + str(m_decode))
         if not Messenger.logging_on and Messenger.logging_mess_on:
             logging.debug(str(self.name) + " received message: " + str(m_decode))
