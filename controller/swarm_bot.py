@@ -1,11 +1,14 @@
+from controller.information_transfer import Messenger
+from threading import *
 from robot import Control
 
 class Swarm_bot(object):
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, id, communication_settings):
         self.parsed_command = None
         self.interval = float(0)
         self.control = Control()
+        self.mess_event = Event()
+        self.messenger = Messenger(id, communication_settings, self.mess_event)
 
     def read_message(self, simple_command):
 
@@ -27,3 +30,16 @@ class Swarm_bot(object):
             self.control.back(self.interval)
 
         return cmd
+
+    def start_communication(self):
+        t_command = Thread(target=self.acquire_command)
+        t_command.start()
+        t_command.join()
+
+    def acquire_command(self):
+        self.mess_event.wait()
+        self.execute_command(self.messenger.get_last_message())
+        self.mess_event.clear()
+
+    def execute_command(self, parsed_command):
+        print (str(parsed_command))

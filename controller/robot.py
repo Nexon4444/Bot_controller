@@ -9,25 +9,27 @@ from Queue import Queue
 
 class Control(object):
     sensor_pin_id = 45
-    def
+    program_on_bot = False
+
     def __init__(self):
-        mraa.pwma = mraa.Pwm(20)
-        mraa.pwma.period_us(1000)
-        mraa.pwma.enable(True)
+        if Control.program_on_bot:
+            mraa.pwma = mraa.Pwm(20)
+            mraa.pwma.period_us(1000)
+            mraa.pwma.enable(True)
 
-        mraa.pwmb = mraa.Pwm(14)
-        mraa.pwmb.period_us(1000)
-        mraa.pwmb.enable(True)
+            mraa.pwmb = mraa.Pwm(14)
+            mraa.pwmb.period_us(1000)
+            mraa.pwmb.enable(True)
 
-        mraa.a1 = mraa.Gpio(33)
-        mraa.a1.dir(mraa.DIR_OUT)
-        mraa.a2 = mraa.Gpio(46)
-        mraa.a2.dir(mraa.DIR_OUT)
+            mraa.a1 = mraa.Gpio(33)
+            mraa.a1.dir(mraa.DIR_OUT)
+            mraa.a2 = mraa.Gpio(46)
+            mraa.a2.dir(mraa.DIR_OUT)
 
-        mraa.b1 = mraa.Gpio(48)
-        mraa.b1.dir(mraa.DIR_OUT)
-        mraa.b2 = mraa.Gpio(36)
-        mraa.b2.dir(mraa.DIR_OUT)
+            mraa.b1 = mraa.Gpio(48)
+            mraa.b1.dir(mraa.DIR_OUT)
+            mraa.b2 = mraa.Gpio(36)
+            mraa.b2.dir(mraa.DIR_OUT)
 
     def move(self, xpa, xpb, xa1, xa2, xb1, xb2, t):
         # time.sleep(0.1)
