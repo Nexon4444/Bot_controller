@@ -21,7 +21,7 @@ args = parser.parse_args()
 # print args.accumulate(args.integers)
 
 
-swarm_bot = Swarm_bot(id=args.bot_id, communication_settings=CommunicationSettings(args.broker, args.port))
+swarm_bot = Swarm_bot(id=2, communication_settings=CommunicationSettings(args.broker, args.port))
 # swarm_bot.start_communication()
 swarm_bot.messenger.subscribe(topic="test")
 # mes = Messenger(None, communication_settings=CommunicationSettings(args.broker, args.port), mess_event=None)
