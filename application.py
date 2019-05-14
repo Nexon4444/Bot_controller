@@ -21,13 +21,13 @@ args = parser.parse_args()
 # print args.accumulate(args.integers)
 
 
-swarm_bot = Swarm_bot(id=2, communication_settings=CommunicationSettings(args.broker, args.port))
+swarm_bot = Swarm_bot(id=args.bot_id, communication_settings=CommunicationSettings(args.broker, args.port))
 # swarm_bot.start_communication()
-swarm_bot.messenger.subscribe(topic="test")
+swarm_bot.messenger.subscribe(topic='1'.encode('UTF-8'))
 # mes = Messenger(None, communication_settings=CommunicationSettings(args.broker, args.port), mess_event=None)
 # mes.subscribe("test")
-swarm_bot.messenger.send(topic="test", message=str("asdqtwgehsyizwHEAioeosf"))
-time.sleep(200)
+# swarm_bot.messenger.send(topic="test", message=str("asdqtwgehsyizwHEAioeosf"))
+time.sleep(2000)
 # mes = Messenger(args.bot_id, CommunicationSettings(args.broker, args.port))
 # mes.send("1/main", "sdafgwrrwerwe")
 
