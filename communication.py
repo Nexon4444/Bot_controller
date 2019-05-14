@@ -104,7 +104,6 @@ class Communicate(object):
 
         print("connecting to broker", str(broker))
         self.client.connect(broker, port)
-
         # while not client.conne(?P<swarm_bot_name>\w*):(cted_flag: #wait in loop
         #     print("In wait loop")
         #     time.sleep(1)
