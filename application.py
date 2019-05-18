@@ -1,6 +1,5 @@
-from controller.information_transfer import *
-from controller.robot import *
 from controller.swarm_bot import Swarm_bot
+import os
 from model.config import *
 import argparse
 import time
@@ -13,22 +12,15 @@ parser.add_argument('-b', '--broker', type=str,
 
 parser.add_argument('-p', '--port', type=int,
                     help='broker port')
-# parser.add_argument('--sum', dest='accumulate', action='store_const',
-#                     const=sum, default=max,
-#                     help='sum the integers (default: find the max)')
 
 args = parser.parse_args()
-# print args.accumulate(args.integers)
-
-
-swarm_bot = Swarm_bot(id=args.bot_id, communication_settings=CommunicationSettings(args.broker, args.port))
-# swarm_bot.start_communication()
-swarm_bot.messenger.subscribe(topic='1'.encode('UTF-8'))
-# mes = Messenger(None, communication_settings=CommunicationSettings(args.broker, args.port), mess_event=None)
-# mes.subscribe("test")
-# swarm_bot.messenger.send(topic="test", message=str("asdqtwgehsyizwHEAioeosf"))
-time.sleep(2000)
-# mes = Messenger(args.bot_id, CommunicationSettings(args.broker, args.port))
-# mes.send("1/main", "sdafgwrrwerwe")
+mess = Messenger(1, broker=args.broker, port=args.port)
+# mess2 = Messenger("server", broker=args.broker, port=args.port)
+# mess2.subscribe("server/receive")
+# mess.add_client("server/receive")
+# mess.send(message="qweqweqweqDFASGF ASFV")
+time.sleep(10)
+print (str(mess.get_last_message()))
+# print (str(mess2.get_last_message()))
 
 
