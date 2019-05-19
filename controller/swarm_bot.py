@@ -1,14 +1,21 @@
-from controller.information_transfer import Messenger
+from controller.information_transfer import Messenger, MTYPE, MSIMPLE
 from threading import *
 from robot import Control
+import logging
+logging.basicConfig(level=logging.DEBUG,
+                    format='(%(threadName)-10s) %(message)s',
+                    )
 
 class Swarm_bot(object):
-    def __init__(self, id, communication_settings):
+    def __init__(self, id, broker, port):
         self.parsed_command = None
         self.interval = float(0)
         self.control = Control()
         self.mess_event = Event()
-        self.messenger = Messenger(id, communication_settings, self.mess_event)
+        self.messenger = Messenger(id, broker, port, self.mess_event)
+
+    def log(self, msg):
+        logging.debug(msg=msg)
 
     def read_message(self, simple_command):
 
@@ -41,5 +48,11 @@ class Swarm_bot(object):
         self.execute_command(self.messenger.get_last_message())
         self.mess_event.clear()
 
-    def execute_command(self, parsed_command):
-        print (str(parsed_command))
+    def execute_command(self, command):
+        print (MTYPE.SIMPLE)
+        print (command.message["command"])
+        if command.type == MTYPE.SIMPLE:
+            if command.message["command"] == MSIMPLE.FORWARD:
+                self.log("Executing command: " + MTYPE.SIMPLE + "." + MSIMPLE.FORWARD)
+                self.control.forward(float(command.message["time"]))
+

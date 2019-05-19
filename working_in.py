@@ -14,10 +14,8 @@ parser.add_argument('-p', '--port', type=int,
                     help='broker port')
 
 args = parser.parse_args()
-swarm_bot = Swarm_bot(id=args.bot_id, broker=args.broker, port=args.port)
-# mess = Messenger(1, broker=args.broker, port=args.port)
-swarm_bot.start_communication()
+mess = Messenger(1, broker=args.broker, port=args.port)
 time.sleep(10)
-print (str(swarm_bot.messenger.get_last_message()))
+print (str(mess.get_last_message()))
 
 

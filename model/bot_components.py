@@ -358,7 +358,6 @@ class BotInfo:
     def __str__(self):
         return str("bot id: ") + str(self.bot_id) + "\n" + str("position: ") + str(
             self.position) + "\ndirection: " + str(self.dir)
-
 class BotInfoEncoder(JSONEncoder):
     def default(self, o):
         ve = VectorEncoder()
@@ -372,6 +371,7 @@ class BotInfoEncoder(JSONEncoder):
             }
         else:
             return json.JSONEncoder.default(self, o)
+
 class Vector:
     def __init__(self, x, y):
         self.x = x
@@ -464,20 +464,19 @@ class Vector:
 
     # def __default(self):
     #     return self.__dict__
-
 class VectorEncoder(JSONEncoder):
     def default(self, o):
         if isinstance(o, Vector):
             return [o.x, o.y]
         else:
             return json.JSONEncoder.default(self, o)
+
 class MovementData:
     def __init__(self, poz, direction, time, command):
         self.poz = poz
         self.direction = direction
         self.time = time
         self.command = command
-
 class MovementDataEncoder(JSONEncoder):
     ve = VectorEncoder()
     def default(self, o):

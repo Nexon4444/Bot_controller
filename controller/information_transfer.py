@@ -13,7 +13,7 @@ class Messenger:
     logging_mess_on = True
 
 
-    def __init__(self, name, broker, port):
+    def __init__(self, name, broker, port, mess_event):
         self.name = name
 
         self.sender = mqtt.Client(str(name) + "_sender")
@@ -28,6 +28,7 @@ class Messenger:
         self.receiver.on_connect = self.on_connect
         self.receiver.on_message = self.on_message
         self.receiver.on_subscribe = self.on_subscribe
+        self.receiver.mess_event = mess_event
         # self.main_channel = "main"
         #threading
 
@@ -92,7 +93,7 @@ class Messenger:
 
         if not Messenger.logging_on and Messenger.logging_mess_on:
             logging.debug(str(self.name) + " received message: " + str(m_decode))
-
+        self.receiver.mess_event.set()
         message = self.create_message_from_string(m_decode)
 
     def send(self, topic=None, message="DEFAULT"):
@@ -157,18 +158,22 @@ class MTYPE:
     BOARD = "BOARD"
     SIMPLE = "SIMPLE"
 
+class MSIMPLE:
+    FORWARD = "forward"
+
 class Message:
     def __init__(self, type, message):
-        from model.board import BoardEncoder
-        from model.bot_components import MovementDataEncoder
-        if type is MTYPE.BOARD:
-            be = BoardEncoder()
-            self.message = be.encode(message)
-        elif type is MTYPE.SIMPLE:
-            mde = MovementDataEncoder()
-            self.message = mde.encode(message)
-        else:
-            self.message = message
+        # from model.board import BoardEncoder
+        # from model.bot_components import MovementDataEncoder
+        # if type is MTYPE.BOARD:
+        #     be = BoardEncoder()
+        #     self.message = be.encode(message)
+        # elif type is MTYPE.SIMPLE:
+        #     mde = MovementDataEncoder()
+        #     self.message = mde.encode(message)
+        # else:
+        #     self.message = message
+        self.message = message
         self.type = type
 
     def __str__(self):
