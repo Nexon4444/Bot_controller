@@ -61,4 +61,4 @@ class SensorAnalyzer():
     def localise(self):
 
     # def simulate_signal(self, sig):
-sa = SensorAnalyzer()
+        sa = SensorAnalyzer()

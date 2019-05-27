@@ -1,4 +1,4 @@
-from controller.robot import Control
+from controller.hardware import Control
 from threading import Thread
 import logging
 import threading

@@ -4,7 +4,7 @@
 # con = Control()
 # con.calibrate()
 
-from controller.robot import Control
+from controller.hardware import Control
 
 con = Control()
 con.calibrate()

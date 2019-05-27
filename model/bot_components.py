@@ -8,9 +8,9 @@ logging.basicConfig(level=logging.DEBUG,
                     )
 
 # from swarm_bot_simulator.model.board import Board
-from controller.information_transfer import Messenger
-from shapely.geometry import Point
-from shapely.geometry.polygon import Polygon
+# from controller.information_transfer import Messenger
+# from shapely.geometry import Point
+# from shapely.geometry.polygon import Polygon
 from controller.information_transfer import *
 # from swarm_bot_simulator.model.board import Board
 import math
@@ -34,7 +34,8 @@ class Bot:
         # self.bot_info_real = BotInfo(parsed_bot_info, config.bot_settings)
 
         self.mess_event = threading.Event()
-        self.messenger = Messenger(name=str(self.bot_info.bot_id), config=config,
+        self.messenger = Messenger(name=str(self.bot_info.bot_id),
+                                   config=config,
                                    mess_event=self.mess_event)
 
         # self.messenger.subscribe(self.bot_info.bot_id)
@@ -166,7 +167,7 @@ class Bot:
             steer.limit(self.bot_settings.max_force)
 
     def points2vector(self, bot):
-        diff_poz = Point(bot.bot_info.position.x - self.bot_info.position.x,
+        diff_poz = Vector(bot.bot_info.position.x - self.bot_info.position.x,
                          bot.bot_info.position.y - self.bot_info.position.y)
         diff_vec = Vector(diff_poz.x, diff_poz.y)
         return diff_vec
@@ -258,21 +259,21 @@ class Bot:
             all_bots_cp = {bot_info.bot_id: bot_info for key, bot_info in model.bots_info.items() if bot_info.bot_id != self.bot_info.bot_id}
             return all_bots_cp
 
-        visible_bots = []
-        self_point = (self.bot_info.position.x, self.bot_info.position.y)  # self.bot_info.position
-        left_cone_angle = self.bot_info.dir - Bot.view_cone / 2
-        right_cone_angle = self.bot_info.dir + Bot.view_cone / 2
-
-        side = math.cos(Bot.view_cone / 2) * Bot.view_range
-        left = (math.sin(left_cone_angle) * side, math.cos(left_cone_angle) * side)
-        right = (math.sin(right_cone_angle) * side, math.cos(right_cone_angle) * side)
-        triangle = Polygon([self_point, right, left])
-
-        for bot in model.all_bots:
-            if triangle.contains(Point(bot.bot_info.position.x, bot.bot_info.position.y)):
-                visible_bots.append(bot)
-
-        return visible_bots
+        # visible_bots = []
+        # self_point = (self.bot_info.position.x, self.bot_info.position.y)  # self.bot_info.position
+        # left_cone_angle = self.bot_info.dir - Bot.view_cone / 2
+        # right_cone_angle = self.bot_info.dir + Bot.view_cone / 2
+        #
+        # side = math.cos(Bot.view_cone / 2) * Bot.view_range
+        # left = (math.sin(left_cone_angle) * side, math.cos(left_cone_angle) * side)
+        # right = (math.sin(right_cone_angle) * side, math.cos(right_cone_angle) * side)
+        # triangle = Polygon([self_point, right, left])
+        #
+        # for bot in model.all_bots:
+        #     if triangle.contains(Point(bot.bot_info.position.x, bot.bot_info.position.y)):
+        #         visible_bots.append(bot)
+        #
+        # return visible_bots
 
     def distance(self, bot):
         return self.bot_info.position.distance(bot.bot_info.position)
@@ -330,19 +331,19 @@ class BotInfo:
     size_y = 20
 
     def __init__(self, bot_info_parsed, config):
-        self.is_real = bot_info_parsed.is_real
-        self.bot_id = bot_info_parsed.bot_id
-        self.dir = float(bot_info_parsed.direction)
-        self.position = Vector(float(bot_info_parsed.poz_x), float(bot_info_parsed.poz_y))
+        self.is_real = bot_info_parsed["is_real"]
+        self.bot_id = bot_info_parsed["bot_id"]
+        self.dir = float(bot_info_parsed["direction"])
+        self.position = Vector(float(bot_info_parsed["poz_x"]), float(bot_info_parsed["poz_y"]))
         self.acceleration = Vector(0, 0)
 
-        speed_vec = Vector(bot_info_parsed.speed[0], bot_info_parsed.speed[1])
+        speed_vec = Vector(bot_info_parsed["speed"][0], bot_info_parsed["speed"][1])
 
-        if bot_info_parsed.speed[0] > config.bot_settings.max_speed:
-            speed_vec.x = config.bot_settings.max_speed
+        if bot_info_parsed["speed"][0] > config["bot_settings"]["max_speed"]:
+            speed_vec.x = config["bot_settings"]["max_speed"]
 
-        if bot_info_parsed.speed[1] > config.bot_settings.max_speed:
-            speed_vec.y = config.bot_settings.max_speed
+        if bot_info_parsed["speed"][1] > config["bot_settings"]["max_speed"]:
+            speed_vec.y = config["bot_settings"]["max_speed"]
 
         self.speed = Vector(speed_vec.x, speed_vec.y)
 
@@ -358,6 +359,7 @@ class BotInfo:
     def __str__(self):
         return str("bot id: ") + str(self.bot_id) + "\n" + str("position: ") + str(
             self.position) + "\ndirection: " + str(self.dir)
+
 class BotInfoEncoder(JSONEncoder):
     def default(self, o):
         ve = VectorEncoder()
@@ -464,6 +466,7 @@ class Vector:
 
     # def __default(self):
     #     return self.__dict__
+
 class VectorEncoder(JSONEncoder):
     def default(self, o):
         if isinstance(o, Vector):
@@ -477,6 +480,7 @@ class MovementData:
         self.direction = direction
         self.time = time
         self.command = command
+
 class MovementDataEncoder(JSONEncoder):
     ve = VectorEncoder()
     def default(self, o):

@@ -14,9 +14,56 @@ parser.add_argument('-p', '--port', type=int,
                     help='broker port')
 
 args = parser.parse_args()
-swarm_bot = Swarm_bot(id=args.bot_id, broker=args.broker, port=args.port)
+communication_settings = {
+    "bot_id": args.bot_id,
+    "broker": args.broker,
+    "port": args.port,
+    "mock": True
+}
+
+bot_settings = {
+    "max_speed": 5,
+    "mode": "1lf"
+}
+
+board_settings = {
+    "border_x": 2,
+    "border_y": 2,
+    "side": 20
+}
+
+bot_info = {
+    "is_real": True,
+    "bot_id": args.bot_id,
+    "direction": 0,
+    "speed": [0, 0],
+    "poz_x": 0,
+    "poz_y": 0
+
+}
+
+sensor_settings = {
+    "1lf": {
+        "min_impulse_time": 0.5
+    }
+}
+
+config = {
+    "communication_settings": communication_settings,
+    "bot_info": bot_info,
+    "bot_settings": bot_settings,
+    "board_settings": board_settings,
+    "sensor_settings": sensor_settings
+}
+
+
+
+swarm_bot = Swarm_bot(config)
 # mess = Messenger(1, broker=args.broker, port=args.port)
-swarm_bot.start_communication()
+# swarm_bot.start_communication()
+print ("attempt to analyze")
+swarm_bot.analyze_sensor_data()
+
 time.sleep(10)
 print (str(swarm_bot.messenger.get_last_message()))
 
