@@ -34,7 +34,7 @@ board_settings = {
 
 bot_info = {
     "is_real": True,
-    "bot_id": args.bot_id,
+    "bot_id": str(args.bot_id),
     "direction": 0,
     "speed": [0, 0],
     "poz_x": 0,
@@ -62,9 +62,10 @@ swarm_bot = Swarm_bot(config)
 # mess = Messenger(1, broker=args.broker, port=args.port)
 # swarm_bot.start_communication()
 print ("attempt to analyze")
-swarm_bot.analyze_sensor_data()
+swarm_bot.start_communication()
+# swarm_bot.analyze_sensor_data()
 
 time.sleep(10)
-print (str(swarm_bot.messenger.get_last_message()))
+# print (str(swarm_bot.messenger.get_last_message()))
 
 

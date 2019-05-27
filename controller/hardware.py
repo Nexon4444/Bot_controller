@@ -11,7 +11,7 @@ from Queue import Queue
 
 class Control(object):
     sensor_1lf = 45
-    program_on_bot = True
+    program_on_bot = False
 
     def __init__(self, sensor_event_1lf, config):
         if Control.program_on_bot:

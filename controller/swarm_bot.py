@@ -14,17 +14,18 @@ class Swarm_bot(object):
         self.interval = float(0)
         self.sensor_event_1lf = Event()
         self.control = Control(self.sensor_event_1lf, config=config)
-        self.control.activate_sensors()
+
         self.mess_event = Event()
         self.messenger = Messenger(config["communication_settings"]["bot_id"],
                                    config["communication_settings"]["broker"],
                                    config["communication_settings"]["port"],
-                                   self.mess_event,
-                                   config["communication_settings"]["mock"])
+                                   self.mess_event)
+                                   # config["communication_settings"]["mock"])
         self.config = config
         self.bot_info = BotInfo(config["bot_info"], config)
 
     def launch(self):
+        self.control.activate_sensors()
         t_analyze_sensor_data = Thread(target=self.analyze_sensor_data)
 
         t_analyze_sensor_data.start()
@@ -85,6 +86,10 @@ class Swarm_bot(object):
         if command.type == MMACRO.MEAUSURE_LINE:
                 self.log("Executing command: " + MTYPE.SIMPLE + "." + MSIMPLE.TURN_LEFT)
                 self.control.measure_line()
+
+        if command.type == MTYPE.BOT_INFO:
+                self.log("Executing command: " + MTYPE.BOT_INFO + " Dir: " + command.message.dir)
+
 
     def analyze_sensor_data(self):
         logging.debug("start: " + str(self.bot_info))
