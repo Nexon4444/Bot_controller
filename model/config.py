@@ -6,9 +6,10 @@ class Config:
         self.bot_n = len(app_config["bots"])
         self.communication_settings = CommunicationSettings(app_config["communication_settings"])
         self.bot_settings = BotSettings(app_config["bot_settings"])
-        self.view_settings = ViewSettings(app_config["view_settings"])
+        # self.view_settings = ViewSettings(app_config["view_settings"])
         self.board_settings = BoardSettings(app_config["board_settings"])
         self.bot_infos = [BotInfoSettings(parsed_bot) for parsed_bot in app_config["bots"]]
+        self.sensor_settings = app_config["sensor_settings"]
 
 class CommunicationSettings:
     def __init__(self, communication_settings):
@@ -38,7 +39,11 @@ class BotSettings:
 class ViewSettings:
     def __init__(self, view_settings):
         self.launch = view_settings["launch"]
-
+# class SensorSettings:
+#     def __init__(self):
+#         "1lf": {
+#             "min_impulse_time": 0.5
+#         }
 class BotInfoSettings:
     def __init__(self, bots):
         self.bot_id = bots["bot_id"]

@@ -1,4 +1,5 @@
-from controller.information_transfer import Messenger, MTYPE, MSIMPLE, MMACRO
+# from controller.information_transfer import Messenger, MTYPE, MSIMPLE, MMACRO
+import controller.information_transfer as it
 from threading import *
 
 from model.bot_components import BotInfo, Vector
@@ -16,13 +17,15 @@ class Swarm_bot(object):
         self.control = Control(self.sensor_event_1lf, config=config)
 
         self.mess_event = Event()
-        self.messenger = Messenger(config["communication_settings"]["bot_id"],
-                                   config["communication_settings"]["broker"],
-                                   config["communication_settings"]["port"],
+        self.messenger = it.Messenger(config.bot_infos[0].bot_id,
+                                   config.communication_settings.broker,
+                                   config.communication_settings.port,
                                    self.mess_event)
                                    # config["communication_settings"]["mock"])
         self.config = config
-        self.bot_info = BotInfo(config["bot_info"], config)
+        self.bot_info = BotInfo(config.bot_infos[0])
+        self.time_per_degree = 0.002
+        self.time_per_distance = 0.5
 
     def launch(self):
         self.control.activate_sensors()
@@ -66,29 +69,34 @@ class Swarm_bot(object):
             self.mess_event.clear()
 
     def execute_command(self, command):
-        print (MTYPE.SIMPLE)
-        print (command.message["command"])
-        if command.type == MTYPE.SIMPLE:
-            if command.message["command"] == MSIMPLE.FORWARD:
-                self.log("Executing command: " + MTYPE.SIMPLE + "." + MSIMPLE.FORWARD)
-                self.control.forward(float(command.message["time"]))
-            elif command.message["command"] == MSIMPLE.REVERSE:
-                self.log("Executing command: " + MTYPE.SIMPLE + "." + MSIMPLE.REVERSE)
+        print (it.MTYPE.SIMPLE)
+        print (command.content)
+        if command.type == it.MTYPE.SIMPLE:
+            if command.content["command"] == it.MSIMPLE.FORWARD:
+                self.log("Executing command: " + it.MTYPE.SIMPLE + "." + it.MSIMPLE.FORWARD)
+                self.control.forward(float(command.content["time"]))
+            elif command.content["command"] == it.MSIMPLE.REVERSE:
+                self.log("Executing command: " + it.MTYPE.SIMPLE + "." + it.MSIMPLE.REVERSE)
                 raise NotImplementedError("No reverse")
-                # self.control.(float(command.message["time"]))
-            elif command.message["command"] == MSIMPLE.TURN_RIGHT:
-                self.log("Executing command: " + MTYPE.SIMPLE + "." + MSIMPLE.TURN_RIGHT)
-                self.control.rrotate(float(command.message["time"]))
-            elif command.message["command"] == MSIMPLE.TURN_LEFT:
-                self.log("Executing command: " + MTYPE.SIMPLE + "." + MSIMPLE.TURN_LEFT)
-                self.control.lrotate(float(command.message["time"]))
+                # self.control.(float(command.content["time"]))
+            elif command.content["command"] == it.MSIMPLE.TURN_RIGHT:
+                self.log("Executing command: " + it.MTYPE.SIMPLE + "." + it.MSIMPLE.TURN_RIGHT)
+                self.control.rrotate(float(command.content["time"]))
+            elif command.content["command"] == it.MSIMPLE.TURN_LEFT:
+                self.log("Executing command: " + it.MTYPE.SIMPLE + "." + it.MSIMPLE.TURN_LEFT)
+                self.control.lrotate(float(command.content["time"]))
 
-        if command.type == MMACRO.MEAUSURE_LINE:
-                self.log("Executing command: " + MTYPE.SIMPLE + "." + MSIMPLE.TURN_LEFT)
+        if command.type == it.MMACRO.MEASURE_LINE:
+                self.log("Executing command: " + it.MTYPE.SIMPLE + "." + it.MSIMPLE.TURN_LEFT)
                 self.control.measure_line()
 
-        if command.type == MTYPE.BOT_INFO:
-                self.log("Executing command: " + MTYPE.BOT_INFO + " Dir: " + command.message.dir)
+        if command.type == it.MTYPE.BOT_INFO:
+                self.log("Executing command: " + it.MTYPE.BOT_INFO + " Dir: " + str(command.content.dir))
+
+        if command.type == it.MTYPE.BOARD:
+                # self.log("Executing command: " + it.MTYPE.BOARD + " " + str(command.content.bots_info["1"]))
+                self.log("Bot_info: " + str(command.content.get_bot_info(self.bot_info.bot_id)))
+                self.steer(command.content.get_bot_info(self.bot_info.bot_id))
 
 
     def analyze_sensor_data(self):
@@ -101,3 +109,25 @@ class Swarm_bot(object):
                 self.bot_info.position.add_vector(Vector(1, 0))
                 logging.debug("movement: " + str(self.bot_info))
                 self.sensor_event_1lf.clear()
+
+    def direct(self, bot_info):
+        diff = bot_info.dir - self.bot_info.dir
+        if diff > 0:
+            self.control.rrotate(self.calc_time_from_dir(diff))
+        else:
+            self.control.lrotate(self.calc_time_from_dir(diff))
+
+        # bot_info.dir - bot_info.dir
+
+    def move(self, bot_info):
+        self.calc_time_for_length(bot_info.speed.magnitude())
+
+    def calc_time_for_length(self, length):
+        return length/self.time_per_distance
+
+    def calc_time_from_dir(self, dir):
+        return dir/self.time_per_degree
+
+    def steer(self, bot_info):
+        self.direct(bot_info)
+        self.move(bot_info)

@@ -11,9 +11,9 @@ from Queue import Queue
 
 class Control(object):
     sensor_1lf = 45
-    program_on_bot = False
+    program_on_bot = True
 
-    def __init__(self, sensor_event_1lf, config):
+    def __init__(self, sensor_event_1lf=None, config=None):
         if Control.program_on_bot:
             mraa.pwma = mraa.Pwm(20)
             mraa.pwma.period_us(1000)
@@ -33,11 +33,11 @@ class Control(object):
             mraa.b2 = mraa.Gpio(36)
             mraa.b2.dir(mraa.DIR_OUT)
 
-        self.sensor_event_1lf = sensor_event_1lf
-
-        self.sensors_dict = {
-            "1lf": Sensor(Control.sensor_1lf, self.sensor_event_1lf, config=config)
-        }
+        if sensor_event_1lf is not None:
+            self.sensor_event_1lf = sensor_event_1lf
+            self.sensors_dict = {
+                "1lf": Sensor(Control.sensor_1lf, self.sensor_event_1lf, config=config)
+            }
 
     def move(self, xpa, xpb, xa1, xa2, xb1, xb2, t):
         # time.sleep(0.1)
@@ -143,6 +143,11 @@ class Control(object):
         print ("rturning")
         self.move_nonstop(1, 0.5, 1, 0, 1, 0)
 
+    def lrotate_for(self, tide, speed):
+        print ("rotating left for t: " + str(tide) + " speed: " + str(speed))
+        self.lrotate_nonstop(speed)
+        time.sleep(tide)
+        self.stop()
     # def move_front_until_sensor_act(self):
     #     e = threading.Event()
     #     con = Control()
@@ -270,7 +275,7 @@ class Sensor:
         self.r_lock = threading.RLock()
         self.t_sensor_lf = threading.Thread(target=self.get_sensor_info,
                                             args=[self.sensor_event, 1, Control.sensor_1lf,
-                                                  config["sensor_settings"]["1lf"]["min_impulse_time"]])
+                                                  config.sensor_settings["1lf"]["min_impulse_time"]])
 
     def activate(self):
         logging.debug("Activating sensor on pin: " + str(self.sensor_pin))

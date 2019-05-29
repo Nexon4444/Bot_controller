@@ -3,6 +3,7 @@ import os
 from model.config import *
 import argparse
 import time
+from model.config import *
 parser = argparse.ArgumentParser(description='Swarmbot')
 parser.add_argument('-id', '--bot_id', type=int,
                     help='id of the bot on which we are launching the configuration')
@@ -18,12 +19,21 @@ communication_settings = {
     "bot_id": args.bot_id,
     "broker": args.broker,
     "port": args.port,
-    "mock": True
+    "mock": True,
+    "method_is_direct": False
 }
 
 bot_settings = {
+    "mode": "1lf",
+    "view_mode_is_omni": True,
+    "separation_distance": 100,
+    "cohesion_distance": 200,
+    "alignment_distance": 200,
+    "sep_mul": 4.5,
+    "ali_mul": 2.0,
+    "coh_mul": 1.0,
     "max_speed": 5,
-    "mode": "1lf"
+    "max_force": 1
 }
 
 board_settings = {
@@ -42,6 +52,10 @@ bot_info = {
 
 }
 
+bots = [
+    bot_info
+    ]
+
 sensor_settings = {
     "1lf": {
         "min_impulse_time": 0.5
@@ -50,14 +64,14 @@ sensor_settings = {
 
 config = {
     "communication_settings": communication_settings,
-    "bot_info": bot_info,
     "bot_settings": bot_settings,
     "board_settings": board_settings,
-    "sensor_settings": sensor_settings
+    "sensor_settings": sensor_settings,
+    # "view_settings"
+    "bots": bots
 }
 
-
-
+config = Config(config)
 swarm_bot = Swarm_bot(config)
 # mess = Messenger(1, broker=args.broker, port=args.port)
 # swarm_bot.start_communication()

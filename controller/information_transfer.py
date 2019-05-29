@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.DEBUG,
 last_message = None
 
 class Messenger:
-    logging_on = False
+    logging_on = True
     logging_mess_on = True
 
     def __init__(self, name, broker, port, mess_event):
@@ -90,6 +90,7 @@ class Messenger:
 
     def on_disconnect(self, client, userdata, flags, rc=0):
         self.log("Disconnected result code " + str(rc))
+        self.receiver.loop_stop()
 
     def on_message(self, client, userdata, msg):
         # global last_message
