@@ -1,12 +1,14 @@
-from controller.swarm_bot import Swarm_bot
+# from controller.physical_bot import Physical_bot
 import os
+
+from model.bot_components import Bot
 from model.config import *
 import argparse
 import time
 from model.config import *
 parser = argparse.ArgumentParser(description='Swarmbot')
 parser.add_argument('-id', '--bot_id', type=int,
-                    help='id of the bot on which we are launching the configuration')
+                    help='id of the bot on  which we are launching the configuration')
 
 parser.add_argument('-b', '--broker', type=str,
                     help='broker ip address')
@@ -14,7 +16,16 @@ parser.add_argument('-b', '--broker', type=str,
 parser.add_argument('-p', '--port', type=int,
                     help='broker port')
 
+parser.add_argument('-o', '--on_bot', type=int,
+                    help='is program on bot?')
+
 args = parser.parse_args()
+
+if args.on_bot == 1:
+    on_bot = True
+else:
+    on_bot = False
+
 communication_settings = {
     "bot_id": args.bot_id,
     "broker": args.broker,
@@ -48,7 +59,8 @@ bot_info = {
     "direction": 0,
     "speed": [0, 0],
     "poz_x": 0,
-    "poz_y": 0
+    "poz_y": 0,
+    "on_robot": on_bot
 
 }
 
@@ -72,11 +84,14 @@ config = {
 }
 
 config = Config(config)
-swarm_bot = Swarm_bot(config)
+# swarm_bot = Physical_bot(config)
 # mess = Messenger(1, broker=args.broker, port=args.port)
 # swarm_bot.start_communication()
 print ("attempt to analyze")
-swarm_bot.start_communication()
+swarm_bot = Bot(bot_id=args.bot_id, config=config)
+swarm_bot.run()
+
+# Bot.swarm_bot.start_communication()
 # swarm_bot.analyze_sensor_data()
 
 time.sleep(10)

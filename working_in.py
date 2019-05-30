@@ -1,4 +1,4 @@
-from controller.swarm_bot import Swarm_bot
+from controller.physical_bot import Physical_bot
 import os
 from model.config import *
 import argparse

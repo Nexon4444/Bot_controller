@@ -11,10 +11,9 @@ from Queue import Queue
 
 class Control(object):
     sensor_1lf = 45
-    program_on_bot = True
 
     def __init__(self, sensor_event_1lf=None, config=None):
-        if Control.program_on_bot:
+        if config is None or config.bot_infos[0].on_robot is True:
             mraa.pwma = mraa.Pwm(20)
             mraa.pwma.period_us(1000)
             mraa.pwma.enable(True)
@@ -41,6 +40,22 @@ class Control(object):
 
     def move(self, xpa, xpb, xa1, xa2, xb1, xb2, t):
         # time.sleep(0.1)
+        print ("moving motors")
+        pwma = mraa.pwma.read()
+        pwmb = mraa.pwmb.read()
+        a1 = mraa.a1.read()
+        b1 = mraa.b1.read()
+        a2 = mraa.a2.read()
+        b2 = mraa.b2.read()
+
+        print ("before:\n" +
+               "pwma: " + str(pwma) +
+               " pwmb: " + str(pwmb) +
+               " a1: " + str(a1) +
+               " b1: " + str(b1) +
+               " a2: " + str(a2) +
+               " b2: " + str(b2))
+
         mraa.pwma.write(xpa)
         mraa.pwmb.write(xpb)
         mraa.a1.write(xa1)
@@ -48,6 +63,15 @@ class Control(object):
         mraa.a2.write(xa2)
         mraa.b2.write(xb2)
 
+        print ("after:\n" +
+               " pwma: " + str(pwma) +
+               " pwmb: " + str(pwmb) +
+               " a1: " + str(a1) +
+               " b1: " + str(b1) +
+               " a2: " + str(a2) +
+               " b2: " + str(b2))
+
+        logging.debug("t: " + str(t))
         time.sleep(t)
         mraa.a1.write(0)
         mraa.b1.write(0)
@@ -66,8 +90,8 @@ class Control(object):
         self.move(1, 1, 0, 1, 0, 1, tide)
 
     def lrotate(self, tide):
-        print("lrotating")
-        self.move(1, 1, 0, 1, 1, 0, tide)
+        print("lrotating: " + str(tide))
+        self.move(1, 1, 0, 1, 1, 0, float(tide))
 
     def rrotate(self, tide):
         print("rrotating")
@@ -104,12 +128,34 @@ class Control(object):
     #         prev_switch = switch
 
     def move_nonstop(self, xpa, xpb, xa1, xa2, xb1, xb2):
+        print ("moving motors")
+        pwma = mraa.pwma.read()
+        pwmb = mraa.pwmb.read()
+        a1 = mraa.a1.read()
+        b1 = mraa.b1.read()
+        a2 = mraa.a2.read()
+        b2 = mraa.b2.read()
+
+        print ("before:\n" + "pwma: " + str(pwma) +
+               "pwmb: " + str(pwmb) +
+               "a1: " + str(a1) +
+               "b1: " + str(b1) +
+               "a2: " + str(a2) +
+               "b2: " + str(b2))
+
         mraa.pwma.write(xpa)
         mraa.pwmb.write(xpb)
         mraa.a1.write(xa1)
         mraa.b1.write(xb1)
         mraa.a2.write(xa2)
         mraa.b2.write(xb2)
+        print ("after:\n" +
+               "pwma: " + str(pwma) +
+               "pwmb: " + str(pwmb) +
+               "a1: " + str(a1) +
+               "b1: " + str(b1) +
+               "a2: " + str(a2) +
+               "b2: " + str(b2))
 
     def stop(self):
         mraa.a1.write(0)
@@ -128,7 +174,7 @@ class Control(object):
         self.move_nonstop(speed, speed, 0, 1, 0, 1)
 
     def lrotate_nonstop(self, speed):
-        print("lrotating")
+        print("lrotating nonstop")
         self.move_nonstop(speed, speed, 0, 1, 1, 0)
 
     def rrotate_nonstop(self, speed):
@@ -180,6 +226,7 @@ class Control(object):
         self.stop()
         end = time.time()
         time_of_turns = end - start
+        time_per_degree = number_of_turns/time_of_turns
         print (time_of_turns)
 
     def measure_moving_speed(self, e, speed, q):
@@ -308,9 +355,6 @@ class Sensor:
                     # logging.log(logging.DEBUG, "event after: " + str(e.is_set()))
 
             prev_switch = switch
-
-    # def __del__(self):
-    #     self.t_sensor_lf.join()
 
     @property
     def number_of_activations(self):

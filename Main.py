@@ -1,5 +1,5 @@
 from communication import Communicate
-from controller.swarm_bot import Swarm_bot
+from controller.physical_bot import Physical_bot
 # from robot import Control
 
 print ("executing bot control")
@@ -14,7 +14,7 @@ def main():
 
     # control = Control()
     # control.forward(1)
-    swarm_bot2 = Swarm_bot("swarm_bot2")
+    swarm_bot2 = Physical_bot("swarm_bot2")
     com = Communicate(swarm_bot2, broker_adr)
     # m = com.analyze_message("you_touch_my_shialala:19.20:39.34", "input_vector")
     # m2 = com.analyze_simple_message("you_touch_my_shialala:ma_ding_dong:4")

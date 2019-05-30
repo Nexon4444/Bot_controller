@@ -1,18 +1,23 @@
 # from swarm_bot_simulator.model.config import PozInfo
 import json
-
+import time
 import logging
-
+import math
 from ast import literal_eval
 from json import JSONEncoder
+
+from controller.hardware import Control
+
 logging.basicConfig(level=logging.DEBUG,
                     format='(%(threadName)-10s) %(message)s',
                     )
 
 # from swarm_bot_simulator.model.board import Board
 # import swarm_bot_simulator.controller.information_transfer as it
-from shapely.geometry import Point
-from shapely.geometry.polygon import Polygon
+# from shapely.geometry import Point
+# from shapely.geometry.polygon import Polygon
+import controller.information_transfer as it
+# import
 # from swarm_bot_simulator.model.board import Board
 import math
 import copy
@@ -22,9 +27,9 @@ class Bot:
     # last_id = 0
     view_range = 1000
     view_cone = 60
+
     # def __init__(self, bot_info, info_sent_event, config):
     def __init__(self, bot_id, config):
-        import controller.information_transfer as it
         self.bot_id = str(bot_id)
         self.communication_settings = config.communication_settings
         self.bot_settings = config.bot_settings
@@ -46,7 +51,7 @@ class Bot:
 
         # self.messenger.subscribe(self.bot_info.bot_id)
         self.movement = Movement(communication_channel=bot_id, messenger=self.messenger)
-
+        self.physical_bot = None
         self.lock = threading.Lock()
         self.signal = threading.Condition()
         self.line = 0
@@ -59,8 +64,8 @@ class Bot:
         self.name = "swarm_bot" + str(bot_id)
         # self.bot_info.speed = Vector(0, 0)
         # self.bot_info.acceleration = Vector(0, 0)
-
         self.start_sensor_threads()
+        # if config.bot_infos
 
     def start_thread(self):
         t_bot = threading.Thread(target=self.run)
@@ -79,6 +84,7 @@ class Bot:
             self.borders()
             self.update()
             # self.update_board_info()
+            self.physical_bot.acquire_command(self.bot_info)
             self.send_bot_info_to_server()
             # self.send_board_to_server()
 
@@ -86,22 +92,18 @@ class Bot:
         # return self.bot_info
 
     def send_board_to_server(self):
-        import controller.information_transfer as it
         mes = it.Message(id=self.bot_id, type=it.MTYPE.BOARD, content=self.board)
         self.messenger.send(message=mes)
 
     def send_bot_info_to_server(self):
-        import controller.information_transfer as it
         mes = it.Message(id=self.bot_id, type=it.MTYPE.BOT_INFO, content=self.bot_info)
         self.messenger.send(message=mes)
 
     def send_ready_to_server(self):
-        import controller.information_transfer as it
         mes = it.Message(id=self.bot_id, type=it.MTYPE.SERVER, content=it.MSERVER.READY)
         self.messenger.send(message=mes)
 
     def should_continue(self):
-        import controller.information_transfer as it
         self.mess_event.wait()
         last_message = self.messenger.get_last_message()
         if last_message.type == it.MTYPE.ALGORITHM_COMMAND:
@@ -113,7 +115,6 @@ class Bot:
         # return True
 
     def get_init_info_from_server(self):
-        import controller.information_transfer as it
         self.mess_event.wait()
         received = self.messenger.get_last_message()
         if received.type == it.MTYPE.SERVER:
@@ -127,8 +128,14 @@ class Bot:
         self.board = received.content
         # x = received.content.bots_info["1"]
         self.set_init_values(received.content.bots_info[str(self.bot_id)])
+        self.check_if_real()
         self.mess_event.clear()
         # self.messenger.
+
+    def check_if_real(self):
+        if self.bot_info.is_real is True:
+            self.physical_bot = Physical_bot(config=self.config, messenger=self.messenger)
+            logging.debug("This a physical instance of a bot, initializing hardware")
 
     def set_init_values(self, bot_info):
         self.bot_info = copy.deepcopy(bot_info)
@@ -164,7 +171,6 @@ class Bot:
 
     def initialize_comm(self):
         # topic_name = "swarm_bot" + str(self.bot_info.bot_id)
-        import controller.information_transfer as it
         self.messenger = it.Messenger(name=self.name, communication_settings=self.communication_settings)
 
     def comm_out(self):
@@ -248,7 +254,7 @@ class Bot:
             steer.limit(self.bot_settings.max_force)
 
     def points2vector(self, bot_info):
-        diff_poz = Point(bot_info.position.x - self.bot_info.position.x,
+        diff_poz = Vector(bot_info.position.x - self.bot_info.position.x,
                          bot_info.position.y - self.bot_info.position.y)
         diff_vec = Vector(diff_poz.x, diff_poz.y)
         return diff_vec
@@ -401,7 +407,7 @@ class Bot:
                 + "\nposition: " + str(self.bot_info.position)
                 + "\nspeed: " + str(self.bot_info.speed)
                 + "\naccel: " + str(self.bot_info.acceleration)
-                + "\ndir:.di " + str(self.bot_info.dir))
+                + "\ndir: " + str(self.bot_info.dir))
 
 class BotInfo:
     size_x = 20
@@ -665,9 +671,6 @@ class Board:
 
     def run(self):
         pass
-
-    def get_bot_info(self, id):
-        return self.bots_info[id]
     #
     def calculate_locations_from_bot_data(self):
         pass
@@ -684,3 +687,144 @@ class BoardEncoder(JSONEncoder):
             }
         else:
             return json.JSONEncoder.default(self, o)
+
+class Physical_bot(object):
+    def __init__(self, config, messenger):
+        self.bot_id = config.bot_infos[0].bot_id
+        self.parsed_command = None
+        self.interval = float(0)
+        self.sensor_event_1lf = threading.Event()
+        self.control = Control(self.sensor_event_1lf, config=config)
+
+        # self.mess_event = threading.Event()
+        self.messenger = messenger
+        # self.messenger = it.Messenger(self.bot_id,
+        #                            config.communication_settings.broker,
+        #                            config.communication_settings.port,
+        #                            self.mess_event)
+        # config["communication_settings"]["mock"])
+        self.config = config
+        self.bot_info = BotInfo(config.bot_infos[0])
+        self.time_per_degree = 0.002
+        self.time_per_distance = 0.5
+
+    def launch(self):
+        self.control.activate_sensors()
+        t_analyze_sensor_data = threading.Thread(target=self.analyze_sensor_data)
+
+        t_analyze_sensor_data.start()
+        t_analyze_sensor_data.join()
+
+    def log(self, msg):
+        logging.debug(msg=msg)
+
+    def read_message(self, simple_command):
+        self.interval = float(simple_command.interval)
+        self.parsed_command = self.choose_command(simple_command.command)
+
+    def choose_command(self, cmd):
+        if (cmd == "lrotate"):
+            self.control.lrotate(self.interval)
+        elif (cmd == "rrotate"):
+            self.control.rrotate(self.interval)
+        elif (cmd == "lturn"):
+            self.control.lturn(self.interval)
+        elif (cmd == "rturn"):
+            self.control.rturn(self.interval)
+        elif (cmd == "forward"):
+            self.control.forward(self.interval)
+        elif (cmd == "back"):
+            self.control.back(self.interval)
+
+        return cmd
+
+    def start_communication(self):
+        t_command = threading.Thread(target=self.acquire_multiple_commands)
+        t_command.start()
+        t_command.join()
+
+    def acquire_multiple_commands(self):
+        while True:
+            self.mess_event.wait()
+            self.acquire_command()
+            self.mess_event.clear()
+
+    def acquire_command(self, bot_info):
+        # last_message = self.messenger.get_last_message()
+        self.execute_command(it.Message(id=self.bot_id, type=it.MTYPE.BOT_INFO, content=bot_info))
+
+    def execute_command(self, command):
+        print (it.MTYPE.SIMPLE)
+        print (command.content)
+        if command.type == it.MTYPE.SIMPLE:
+            if command.content["command"] == it.MSIMPLE.FORWARD:
+                self.log("Executing command: " + it.MTYPE.SIMPLE + "." + it.MSIMPLE.FORWARD)
+                self.control.forward(float(command.content["time"]))
+            elif command.content["command"] == it.MSIMPLE.REVERSE:
+                self.log("Executing command: " + it.MTYPE.SIMPLE + "." + it.MSIMPLE.REVERSE)
+                raise NotImplementedError("No reverse")
+                # self.control.(float(command.content["time"]))
+            elif command.content["command"] == it.MSIMPLE.TURN_RIGHT:
+                self.log("Executing command: " + it.MTYPE.SIMPLE + "." + it.MSIMPLE.TURN_RIGHT)
+                self.control.rrotate(float(command.content["time"]))
+            elif command.content["command"] == it.MSIMPLE.TURN_LEFT:
+                self.log("Executing command: " + it.MTYPE.SIMPLE + "." + it.MSIMPLE.TURN_LEFT)
+                self.control.lrotate(float(command.content["time"]))
+
+        elif command.type == it.MMACRO.MEASURE_LINE:
+            self.log("Executing command: " + it.MTYPE.SIMPLE + "." + it.MSIMPLE.TURN_LEFT)
+            self.control.measure_line()
+
+        elif command.type == it.MTYPE.BOT_INFO:
+            self.log("Executing command: " + it.MTYPE.BOT_INFO + " Dir: " + str(command.content.dir))
+            self.log("Bot_info: " + str(command.content))
+            self.steer(command.content)
+
+        # elif command.type == it.MTYPE.BOARD:
+        #         # self.log("Executing command: " + it.MTYPE.BOARD + " " + str(command.content.bots_info["1"]))
+        #         self.log("Bot_info: " + str(command.content.get_bot_info(self.bot_info.bot_id)))
+        #         self.steer(command.content.get_bot_info(self.bot_info.bot_id))
+        #         bot = Bot(config=self.config, bot_id=self.bot_id)
+
+    def analyze_sensor_data(self):
+        logging.debug("start: " + str(self.bot_info))
+        if self.config["bot_settings"]["mode"] is "1lf":
+            while True:
+                logging.debug("analyze mode: " + str(self.config["bot_settings"]["mode"]))
+                # sensor = self.control.sensors_dict["1lf"]
+                self.sensor_event_1lf.wait()
+                self.bot_info.position.add_vector(Vector(1, 0))
+                logging.debug("movement: " + str(self.bot_info))
+                self.sensor_event_1lf.clear()
+
+    def direct(self, bot_info):
+        diff = bot_info.dir - self.bot_info.dir
+        logging.debug("Changing direction by: " + str(diff) + " degrees")
+        if diff > 0:
+            self.control.rrotate(self.calc_time_from_dir(diff))
+        else:
+            self.control.lrotate(self.calc_time_from_dir(diff))
+
+        # bot_info.dir - bot_info.dir
+
+    def move(self, bot_info):
+        logging.debug("Moving: " + str(bot_info.speed.magnitude()))
+        self.control.forward(self.calc_time_for_length(bot_info.speed.magnitude()))
+
+    # def pivot(self, diff):
+    #     if diff > 0:
+    #         self.calc_time_from_dir(diff)/self.minimal_time
+    #         self.control.rrotate(self.calc_time_from_dir(diff))
+
+    def calc_time_for_length(self, length):
+        return length*self.time_per_distance
+
+    def calc_time_from_dir(self, dir):
+        return math.fabs(dir*self.time_per_degree)
+
+    def steer(self, bot_info):
+        if self.config.bot_infos[0].on_robot is True:
+            self.direct(bot_info)
+            time.sleep(1)
+            self.move(bot_info)
+            time.sleep(1)

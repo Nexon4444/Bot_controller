@@ -1,4 +1,4 @@
-from model.bot_components import *
+# from model.bot_components import *
 # from swarm_bot_simulator.model.board import BotDataContainer
 
 class Config:
@@ -52,3 +52,4 @@ class BotInfoSettings:
         self.is_real = bots["is_real"]
         self.speed = bots["speed"]
         self.direction = bots["direction"]
+        self.on_robot = bots["on_robot"]

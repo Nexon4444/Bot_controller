@@ -3,7 +3,7 @@ import time
 # from swarm_bot_simulator.model.bot_components import MovementDataEncoder, MovementData, BotInfo, BotInfoEncoder, Vector, VectorEncoder
 from Queue import Queue
 
-import model.bot_components as comp
+# import model.bot_components as comp
 # import MovementDataEncoder, MovementData, BotInfo, BotInfoEncoder, Vector, VectorEncoder
 from threading import *
 import paho.mqtt.client as mqtt
@@ -37,7 +37,7 @@ class Messenger:
         # self.main_channel = "main"
         #threading
 
-        self.log("connecting to broker: " + str(broker))
+        # self.log("connecting to broker: " + str(broker))
         self.sender.connect(broker, port)
         self.receiver.connect(broker, port)
 
@@ -166,10 +166,13 @@ class Messenger:
         return result_dict
 
     def get_last_message(self):
-        if self.receiver.last_messages:
-            with self.last_message_lock:
+        logging.debug("is empty? " + str(self.receiver.last_messages.empty()))
+        if not self.receiver.last_messages.empty():
+            # with self.last_message_lock:
                 # print(self.receiver.last_messages.get())
-                return Messenger.create_message_from_string(self.receiver.last_messages.get())
+            logging.debug("last message queue: " + str(self.receiver.last_messages))
+            received = self.receiver.last_messages.get()
+            return Messenger.create_message_from_string(received)
         else:
             return None
 
@@ -207,6 +210,7 @@ class MSERVER:
 
 class Message:
     def __init__(self, id, type, content):
+        import model.bot_components as comp
         # from model.board import BoardEncoder
         # from model.bot_components import MovementDataEncoder
         # if type is MTYPE.BOARD:
@@ -217,6 +221,7 @@ class Message:
         #     self.message = mde.encode(message)
         # else:
         #     self.message = message
+
         if isinstance(content, dict) and type == MTYPE.BOT_INFO:
             bot_info = comp.BotInfo()
             bot_info.from_dict(content)
@@ -236,6 +241,7 @@ class Message:
 
 class MessageEncoder(json.JSONEncoder):
     def default(self, o):
+        import model.bot_components as comp
         be = comp.BoardEncoder()
         mde = comp.MovementDataEncoder()
         bie = comp.BotInfoEncoder()
